@@ -3934,6 +3934,9 @@ FunctionLiteral* Parser::ParseFunctionLiteral(
                              scope_->AllowsLazyCompilation() &&
                              !parenthesized_function_);
     parenthesized_function_ = false;  // The bit was set for this function only.
+    CheckFunctionName(language_mode(), kind, function_name,
+                      name_is_strict_reserved, function_name_location,
+                      CHECK_OK);
 
     if (is_lazily_parsed) {
       SkipLazyFunctionBody(function_name, &materialized_literal_count,
@@ -3946,11 +3949,8 @@ FunctionLiteral* Parser::ParseFunctionLiteral(
       handler_count = function_state.handler_count();
     }
 
-    // Validate name and parameter names. We can do this only after parsing the
+    // Validate parameter names. We can do this only after parsing the
     // function, since the function can declare itself strict.
-    CheckFunctionName(language_mode(), kind, function_name,
-                      name_is_strict_reserved, function_name_location,
-                      CHECK_OK);
     const bool use_strict_params = is_rest || IsConciseMethod(kind);
     CheckFunctionParameterNames(language_mode(), use_strict_params,
                                 eval_args_error_loc, dupe_error_loc,
