@@ -352,6 +352,9 @@ function testFutureStrictReservedWord(word) {
   CheckStrictMode("function foo (a, " + word + ", b) {}", SyntaxError);
   CheckStrictMode("var foo = function (" + word + ") {}", SyntaxError);
 
+  // Function expression name when the body is strict
+  assertThrows("(function " + word + " () { 'use strict'; })", SyntaxError);
+
   // Function arguments when the body is strict
   assertThrows("function foo (" + word + ", " + word + ") { 'use strict'; }",
                SyntaxError);
