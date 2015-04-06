@@ -89,13 +89,6 @@ function* g() { }
 function* g() { yield yield 1; }
 function* g() { yield 3 + (yield 4); }
 
-// Generator definitions with a name of "yield" are not specifically ruled out
-// by the spec, as the `yield' name is outside the generator itself.  However,
-// in strict-mode, "yield" is an invalid identifier.
-function* yield() { (yield 3) + (yield 4); }
-assertThrows("function* yield() { \"use strict\"; (yield 3) + (yield 4); }",
-             SyntaxError);
-
 // In sloppy mode, yield is a normal identifier, outside of generators.
 function yield(yield) { yield: yield (yield + yield (0)); }
 
