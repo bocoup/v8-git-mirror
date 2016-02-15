@@ -69,8 +69,12 @@ function SameValueZero(x, y) {
 
 function ConcatIterableToArray(target, iterable) {
    var index = target.length;
-   for (var element of iterable) {
-     AddIndexedProperty(target, index++, element);
+   //for (var element of iterable) {
+   //  AddIndexedProperty(target, index++, element);
+   //}
+   var result;
+   while ((result = iterable.next()) && !result.done) {
+      AddIndexedProperty(target, index++, result.value);
    }
    return target;
 }

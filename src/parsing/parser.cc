@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stdio.h>
+
 #include "src/parsing/parser.h"
 
 #include "src/api.h"
@@ -3243,11 +3245,14 @@ void Parser::InitializeForEachStatement(ForEachStatement* stmt,
     // iterator = subject[Symbol.iterator]()
     // Hackily disambiguate o from o.next and o [Symbol.iterator]().
     // TODO(verwaest): Come up with a better solution.
+    Expression* thing = factory()->NewVariableProxy(iterator);
+    //printf("raw name: '%s'\n", ((VariableProxy*) thing)->raw_name()->raw_data());
     assign_iterator = factory()->NewAssignment(
-        Token::ASSIGN, factory()->NewVariableProxy(iterator),
+        Token::ASSIGN, thing,
         GetIterator(subject, factory(), subject->position() - 2),
         subject->position());
 
+    printf("InitializeForEachStatement\n");
     // !%_IsJSReceiver(result = iterator.next()) &&
     //     %ThrowIteratorResultNotAnObject(result)
     {

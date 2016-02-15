@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stdio.h>
+
 #include "src/ast/ast.h"
 #include "src/messages.h"
 #include "src/parsing/parameter-initializer-rewriter.h"
@@ -410,6 +412,7 @@ void Parser::PatternRewriter::VisitObjectLiteral(ObjectLiteral* node) {
 
 void Parser::PatternRewriter::VisitArrayLiteral(ArrayLiteral* node,
                                                 Variable** temp_var) {
+  printf("VisitArrayLiteral\n");
   auto temp = *temp_var = CreateTempVar(current_value_);
 
   block_->statements()->Add(parser_->BuildAssertIsCoercible(temp), zone());
@@ -423,6 +426,7 @@ void Parser::PatternRewriter::VisitArrayLiteral(ArrayLiteral* node,
 
   Spread* spread = nullptr;
   for (Expression* value : *node->values()) {
+    printf("  expr is spread? %s\n", value->IsSpread() ? "yes" : "no");
     if (value->IsSpread()) {
       spread = value->AsSpread();
       break;
