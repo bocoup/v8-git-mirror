@@ -38,8 +38,10 @@ void PreParserTraits::ReportMessageAt(int start_pos, int end_pos,
 
 
 PreParserIdentifier PreParserTraits::GetSymbol(Scanner* scanner) {
-  if (scanner->current_token() == Token::FUTURE_RESERVED_WORD) {
-    return PreParserIdentifier::FutureReserved();
+  if (scanner->current_token() == Token::ENUM) {
+    return PreParserIdentifier::Enum();
+  } else if (scanner->current_token() == Token::AWAIT) {
+    return PreParserIdentifier::Await();
   } else if (scanner->current_token() ==
              Token::FUTURE_STRICT_RESERVED_WORD) {
     return PreParserIdentifier::FutureStrictReserved();
@@ -98,10 +100,11 @@ PreParserExpression PreParserTraits::ParseFunctionLiteral(
       function_token_position, type, language_mode, ok);
 }
 
-
 PreParser::PreParseResult PreParser::PreParseLazyFunction(
     LanguageMode language_mode, FunctionKind kind, bool has_simple_parameters,
-    ParserRecorder* log, Scanner::BookmarkScope* bookmark) {
+    bool parsing_module, ParserRecorder* log,
+    Scanner::BookmarkScope* bookmark) {
+  parsing_module_ = parsing_module;
   log_ = log;
   // Lazy functions always have trivial outer scopes (no with/catch scopes).
   Scope* top_scope = NewScope(scope_, SCRIPT_SCOPE);
@@ -586,7 +589,8 @@ PreParser::Statement PreParser::ParseExpressionOrLabelledStatement(
   if (starts_with_identifier && expr.IsIdentifier() && peek() == Token::COLON) {
     // Expression is a single identifier, and not, e.g., a parenthesized
     // identifier.
-    DCHECK(!expr.AsIdentifier().IsFutureReserved());
+    DCHECK(!expr.AsIdentifier().IsEnum());
+    DCHECK(!parsing_module_ || !expr.AsIdentifier().IsAwait());
     DCHECK(is_sloppy(language_mode()) ||
            !IsFutureStrictReserved(expr.AsIdentifier()));
     Consume(Token::COLON);

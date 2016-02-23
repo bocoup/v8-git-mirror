@@ -55,6 +55,12 @@ class PreParserIdentifier {
   static PreParserIdentifier Constructor() {
     return PreParserIdentifier(kConstructorIdentifier);
   }
+  static PreParserIdentifier Enum() {
+    return PreParserIdentifier(kEnumIdentifier);
+  }
+  static PreParserIdentifier Await() {
+    return PreParserIdentifier(kAwaitIdentifier);
+  }
   bool IsEval() const { return type_ == kEvalIdentifier; }
   bool IsArguments() const { return type_ == kArgumentsIdentifier; }
   bool IsEvalOrArguments() const { return IsEval() || IsArguments(); }
@@ -64,7 +70,8 @@ class PreParserIdentifier {
   bool IsYield() const { return type_ == kYieldIdentifier; }
   bool IsPrototype() const { return type_ == kPrototypeIdentifier; }
   bool IsConstructor() const { return type_ == kConstructorIdentifier; }
-  bool IsFutureReserved() const { return type_ == kFutureReservedIdentifier; }
+  bool IsEnum() const { return type_ == kEnumIdentifier; }
+  bool IsAwait() const { return type_ == kAwaitIdentifier; }
   bool IsFutureStrictReserved() const {
     return type_ == kFutureStrictReservedIdentifier ||
            type_ == kLetIdentifier || type_ == kStaticIdentifier ||
@@ -91,7 +98,9 @@ class PreParserIdentifier {
     kArgumentsIdentifier,
     kUndefinedIdentifier,
     kPrototypeIdentifier,
-    kConstructorIdentifier
+    kConstructorIdentifier,
+    kEnumIdentifier,
+    kAwaitIdentifier
   };
 
   explicit PreParserIdentifier(Type type) : type_(type) {}
@@ -969,13 +978,15 @@ class PreParser : public ParserBase<PreParserTraits> {
   // success (even if parsing failed, the pre-parse data successfully
   // captured the syntax error), and false if a stack-overflow happened
   // during parsing.
-  PreParseResult PreParseProgram(int* materialized_literals = 0) {
+  PreParseResult PreParseProgram(int* materialized_literals = 0,
+                                 bool is_module = false) {
     Scope* scope = NewScope(scope_, SCRIPT_SCOPE);
     PreParserFactory factory(NULL);
     FunctionState top_scope(&function_state_, &scope_, scope, kNormalFunction,
                             &factory);
     bool ok = true;
     int start_position = scanner()->peek_location().beg_pos;
+    parsing_module_ = is_module;
     ParseStatementList(Token::EOS, &ok);
     if (stack_overflow()) return kPreParseStackOverflow;
     if (!ok) {
@@ -1000,7 +1011,8 @@ class PreParser : public ParserBase<PreParserTraits> {
   // the final '}'.
   PreParseResult PreParseLazyFunction(
       LanguageMode language_mode, FunctionKind kind, bool has_simple_parameters,
-      ParserRecorder* log, Scanner::BookmarkScope* bookmark = nullptr);
+      bool parsing_module, ParserRecorder* log,
+      Scanner::BookmarkScope* bookmark = nullptr);
 
  private:
   friend class PreParserTraits;

@@ -1549,11 +1549,10 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
   uintptr_t stack_limit = isolate->stack_guard()->real_climit();
   int preparser_materialized_literals = -1;
   int parser_materialized_literals = -2;
-  bool test_preparser = !is_module;
 
   // Preparse the data.
   i::CompleteParserRecorder log;
-  if (test_preparser) {
+  {
     i::Scanner scanner(isolate->unicode_cache());
     i::GenericStringUtf16CharacterStream stream(source, 0, source->length());
     i::Zone zone;
@@ -1563,8 +1562,8 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
                            stack_limit);
     SetParserFlags(&preparser, flags);
     scanner.Initialize(&stream);
-    i::PreParser::PreParseResult result = preparser.PreParseProgram(
-        &preparser_materialized_literals);
+    i::PreParser::PreParseResult result =
+        preparser.PreParseProgram(&preparser_materialized_literals, is_module);
     CHECK_EQ(i::PreParser::kPreParseSuccess, result);
   }
   bool preparse_error = log.HasError();
@@ -1610,7 +1609,7 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
       CHECK(false);
     }
 
-    if (test_preparser && !preparse_error) {
+    if (!preparse_error) {
       v8::base::OS::Print(
           "Parser failed on:\n"
           "\t%s\n"
@@ -1621,7 +1620,7 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
       CHECK(false);
     }
     // Check that preparser and parser produce the same error.
-    if (test_preparser) {
+    {
       i::Handle<i::String> preparser_message =
           FormatMessage(log.ErrorMessageData());
       if (!i::String::Equals(message_string, preparser_message)) {
@@ -1636,7 +1635,7 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
         CHECK(false);
       }
     }
-  } else if (test_preparser && preparse_error) {
+  } else if (preparse_error) {
     v8::base::OS::Print(
         "Preparser failed on:\n"
         "\t%s\n"
@@ -1653,8 +1652,7 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
         "However, parser and preparser succeeded",
         source->ToCString().get());
     CHECK(false);
-  } else if (test_preparser &&
-             preparser_materialized_literals != parser_materialized_literals) {
+  } else if (preparser_materialized_literals != parser_materialized_literals) {
     v8::base::OS::Print(
         "Preparser materialized literals (%d) differ from Parser materialized "
         "literals (%d) on:\n"
@@ -5593,6 +5591,8 @@ TEST(BasicImportExportParsing) {
       "export { static } from 'm.js'",
       "export { let } from 'm.js'",
       "var a; export { a as b, a as c };",
+      "var a; export { a as await };",
+      "var a; export { a as enum };",
 
       "import 'somemodule.js';",
       "import { } from 'm.js';",
@@ -5718,6 +5718,8 @@ TEST(ImportExportParsingErrors) {
       "import { y as yield } from 'm.js'",
       "import { s as static } from 'm.js'",
       "import { l as let } from 'm.js'",
+      "import { a as await } from 'm.js';",
+      "import { a as enum } from 'm.js';",
       "import { x }, def from 'm.js';",
       "import def, def2 from 'm.js';",
       "import * as x, def from 'm.js';",
@@ -5746,6 +5748,229 @@ TEST(ImportExportParsingErrors) {
     i::ParseInfo info(&zone, script);
     i::Parser parser(&info);
     info.set_module();
+    CHECK(!parser.Parse(&info));
+  }
+}
+
+TEST(ModuleAwaitReserved) {
+  i::FLAG_harmony_modules = true;
+
+  // clang-format off
+  const char* kErrorSources[] = {
+      "await;",
+      "await: ;",
+      "var await;",
+      "var [await] = [];",
+      "var { await } = {};",
+      "var { x: await } = {};",
+      "{ var await; }",
+      "let await;",
+      "let [await] = [];",
+      "let { await } = {};",
+      "let { x: await } = {};",
+      "{ let await; }",
+      "const await = null;",
+      "const [await] = [];",
+      "const { await } = {};",
+      "const { x: await } = {};",
+      "{ const await = null; }",
+      "function await() {}",
+      "function f(await) {}",
+      "function* await() {}",
+      "function* g(await) {}",
+      "(function await() {});",
+      "(function (await) {});",
+      "(function* await() {});",
+      "(function* (await) {});",
+      "(await) => {};",
+      "await => {};",
+      "class await {}",
+      "class C { constructor(await) {} }",
+      "class C { m(await) {} }",
+      "class C { static m(await) {} }",
+      "class C { *m(await) {} }",
+      "class C { static *m(await) {} }",
+      "(class await {})",
+      "(class { constructor(await) {} });",
+      "(class { m(await) {} });",
+      "(class { static m(await) {} });",
+      "(class { *m(await) {} });",
+      "(class { static *m(await) {} });",
+      "({ m(await) {} });",
+      "({ *m(await) {} });",
+      "({ set p(await) {} });",
+      "try {} catch (await) {}",
+      "try {} catch (await) {} finally {}"
+  };
+
+  i::Isolate* isolate = CcTest::i_isolate();
+  i::Factory* factory = isolate->factory();
+
+  v8::HandleScope handles(CcTest::isolate());
+  v8::Local<v8::Context> context = v8::Context::New(CcTest::isolate());
+  v8::Context::Scope context_scope(context);
+
+  isolate->stack_guard()->SetStackLimit(i::GetCurrentStackPosition() -
+                                        128 * 1024);
+
+  for (unsigned i = 0; i < arraysize(kErrorSources); ++i) {
+    i::Handle<i::String> source =
+        factory->NewStringFromAsciiChecked(kErrorSources[i]);
+
+    i::Handle<i::Script> script = factory->NewScript(source);
+    i::Zone zone;
+    i::ParseInfo info(&zone, script);
+    i::Parser parser(&info);
+    info.set_module();
+    CHECK(!parser.Parse(&info));
+  }
+  for (unsigned i = 0; i < arraysize(kErrorSources); ++i) {
+    i::Handle<i::String> source =
+        factory->NewStringFromAsciiChecked(kErrorSources[i]);
+
+    i::Handle<i::Script> script = factory->NewScript(source);
+    i::Zone zone;
+    i::ParseInfo info(&zone, script);
+    i::Parser parser(&info);
+    CHECK(parser.Parse(&info));
+  }
+}
+
+
+TEST(ModuleAwaitReservedPreParse) {
+  const char* context_data[][2] = {
+    {"", ""},
+    {NULL, NULL}
+  };
+  const char* error_data[] = {
+    "function f() { var await = 0; }",
+    NULL
+  };
+
+  RunModuleParserSyncTest(context_data, error_data, kError, NULL, 0, NULL, 0);
+}
+
+
+TEST(ModuleAwaitPermitted) {
+  i::FLAG_harmony_modules = true;
+
+  // clang-format off
+  const char* kErrorSources[] = {
+    "({}).await;",
+    "({ await: null });",
+    "({ await() {} });",
+    "({ get await() {} });",
+    "({ set await(x) {} });",
+    "(class { await() {} });",
+    "(class { static await() {} });",
+    "(class { *await() {} });",
+    "(class { static *await() {} });"
+  };
+  // clang-format on
+
+  i::Isolate* isolate = CcTest::i_isolate();
+  i::Factory* factory = isolate->factory();
+
+  v8::HandleScope handles(CcTest::isolate());
+  v8::Local<v8::Context> context = v8::Context::New(CcTest::isolate());
+  v8::Context::Scope context_scope(context);
+
+  isolate->stack_guard()->SetStackLimit(i::GetCurrentStackPosition() -
+                                        128 * 1024);
+
+  for (unsigned i = 0; i < arraysize(kErrorSources); ++i) {
+    i::Handle<i::String> source =
+        factory->NewStringFromAsciiChecked(kErrorSources[i]);
+
+    i::Handle<i::Script> script = factory->NewScript(source);
+    i::Zone zone;
+    i::ParseInfo info(&zone, script);
+    i::Parser parser(&info);
+    info.set_module();
+    CHECK(parser.Parse(&info));
+  }
+}
+
+TEST(EnumReserved) {
+  i::FLAG_harmony_modules = true;
+
+  // clang-format off
+  const char* kErrorSources[] = {
+      "enum;",
+      "enum: ;",
+      "var enum;",
+      "var [enum] = [];",
+      "var { enum } = {};",
+      "var { x: enum } = {};",
+      "{ var enum; }",
+      "let enum;",
+      "let [enum] = [];",
+      "let { enum } = {};",
+      "let { x: enum } = {};",
+      "{ let enum; }",
+      "const enum = null;",
+      "const [enum] = [];",
+      "const { enum } = {};",
+      "const { x: enum } = {};",
+      "{ const enum = null; }",
+      "function enum() {}",
+      "function f(enum) {}",
+      "function* enum() {}",
+      "function* g(enum) {}",
+      "(function enum() {});",
+      "(function (enum) {});",
+      "(function* enum() {});",
+      "(function* (enum) {});",
+      "(enum) => {};",
+      "enum => {};",
+      "class enum {}",
+      "class C { constructor(enum) {} }",
+      "class C { m(enum) {} }",
+      "class C { static m(enum) {} }",
+      "class C { *m(enum) {} }",
+      "class C { static *m(enum) {} }",
+      "(class enum {})",
+      "(class { constructor(enum) {} });",
+      "(class { m(enum) {} });",
+      "(class { static m(enum) {} });",
+      "(class { *m(enum) {} });",
+      "(class { static *m(enum) {} });",
+      "({ m(enum) {} });",
+      "({ *m(enum) {} });",
+      "({ set p(enum) {} });",
+      "try {} catch (enum) {}",
+      "try {} catch (enum) {} finally {}"
+  };
+
+  i::Isolate* isolate = CcTest::i_isolate();
+  i::Factory* factory = isolate->factory();
+
+  v8::HandleScope handles(CcTest::isolate());
+  v8::Local<v8::Context> context = v8::Context::New(CcTest::isolate());
+  v8::Context::Scope context_scope(context);
+
+  isolate->stack_guard()->SetStackLimit(i::GetCurrentStackPosition() -
+                                        128 * 1024);
+
+  for (unsigned i = 0; i < arraysize(kErrorSources); ++i) {
+    i::Handle<i::String> source =
+        factory->NewStringFromAsciiChecked(kErrorSources[i]);
+
+    i::Handle<i::Script> script = factory->NewScript(source);
+    i::Zone zone;
+    i::ParseInfo info(&zone, script);
+    i::Parser parser(&info);
+    info.set_module();
+    CHECK(!parser.Parse(&info));
+  }
+  for (unsigned i = 0; i < arraysize(kErrorSources); ++i) {
+    i::Handle<i::String> source =
+        factory->NewStringFromAsciiChecked(kErrorSources[i]);
+
+    i::Handle<i::Script> script = factory->NewScript(source);
+    i::Zone zone;
+    i::ParseInfo info(&zone, script);
+    i::Parser parser(&info);
     CHECK(!parser.Parse(&info));
   }
 }
