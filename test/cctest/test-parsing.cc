@@ -5750,7 +5750,6 @@ TEST(ImportExportParsingErrors) {
   }
 }
 
-
 TEST(ModuleTopLevelFunctionDecl) {
   // clang-format off
   const char* kErrorSources[] = {

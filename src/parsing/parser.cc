@@ -1915,8 +1915,7 @@ Variable* Parser::Declare(Declaration* declaration,
                 // treated like lexical declarations rather than like var
                 // declarations.
                 (declaration_scope->is_module_scope() &&
-                  (is_function_declaration || var->is_function()))
-                ) &&
+                 (is_function_declaration || var->is_function()))) &&
                // Lexical bindings may appear for some parameters in sloppy
                // mode even with --harmony-sloppy off.
                (is_strict(language_mode()) || allow_harmony_sloppy())) {
