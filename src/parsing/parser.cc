@@ -1910,7 +1910,13 @@ Variable* Parser::Declare(Declaration* declaration,
       var = declaration_scope->DeclareLocal(
           name, mode, declaration->initialization(), kind, kNotAssigned);
     } else if ((IsLexicalVariableMode(mode) ||
-                IsLexicalVariableMode(var->mode())) &&
+                IsLexicalVariableMode(var->mode()) ||
+                // At the top level of a Module, function declarations are
+                // treated like lexical declarations rather than like var
+                // declarations.
+                (declaration_scope->is_module_scope() &&
+                  (is_function_declaration || var->is_function()))
+                ) &&
                // Lexical bindings may appear for some parameters in sloppy
                // mode even with --harmony-sloppy off.
                (is_strict(language_mode()) || allow_harmony_sloppy())) {
