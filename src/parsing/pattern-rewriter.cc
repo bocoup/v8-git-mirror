@@ -80,14 +80,12 @@ Parser::PatternRewriter::PatternContext
 Parser::PatternRewriter::SetAssignmentContextIfNeeded(Expression* node) {
   PatternContext old_context = context();
   if (node->IsAssignment() && node->AsAssignment()->op() == Token::ASSIGN && !IsInitializerContext()) {
-    printf("Calling from SetASsignmentContextIfNeeded\n");
     set_context(ASSIGNMENT);
   }
   return old_context;
 }
 
 
-// Mike: This looks fine
 Parser::PatternRewriter::PatternContext
 Parser::PatternRewriter::SetInitializerContextIfNeeded(Expression* node) {
   // Set appropriate initializer context for BindingElement and
@@ -98,21 +96,12 @@ Parser::PatternRewriter::SetInitializerContextIfNeeded(Expression* node) {
       !node->AsRewritableExpression()->is_rewritten();
   bool is_assignment =
       node->IsAssignment() && node->AsAssignment()->op() == Token::ASSIGN;
-  printf("SetInitializerContextIfNeeded\n");
-  printf("  is_destructuring_assignment: %s\n", is_destructuring_assignment ? "true" : "false");
-  printf("  is_assignment: %s\n", is_assignment ? "true" : "false");
-  printf("  old_context == ASSIGNMENT: %s\n", old_context == ASSIGNMENT ? "true" : "false");
-  printf("  old_context == ASSIGNMENT_INITIALIZER: %s\n", old_context == ASSIGNMENT_INITIALIZER ? "true" : "false");
-  printf("  old_context == BINDING: %s\n", old_context == BINDING ? "true" : "false");
-  printf("  old_context == INITIALIZER: %s\n", old_context == INITIALIZER ? "true" : "false");
   if (is_destructuring_assignment || is_assignment) {
     switch (old_context) {
       case BINDING:
-        printf("Calling from SetInitializerContextIfNeeded (1)\n");
         set_context(INITIALIZER);
         break;
       case ASSIGNMENT:
-        printf("Calling from SetInitializerContextIfNeeded (2)\n");
         set_context(ASSIGNMENT_INITIALIZER);
         break;
       default:
@@ -126,11 +115,7 @@ Parser::PatternRewriter::SetInitializerContextIfNeeded(Expression* node) {
 void Parser::PatternRewriter::VisitVariableProxy(VariableProxy* pattern) {
   Expression* value = current_value_;
 
-  // This is something bogus about this branch:
   if (IsAssignmentContext()) {
-    printf("It's an assignment context\n");
-    printf("  c == ASSIGNMENT: %s\n", context_ == ASSIGNMENT ? "true" : "false");
-    printf("  c == ASSIGNMENT_INITIALIZER: %s\n", context_ == ASSIGNMENT_INITIALIZER ? "true" : "false");
     // In an assignment context, simply perform the assignment
     Assignment* assignment = factory()->NewAssignment(
         Token::ASSIGN, pattern, value, pattern->position());
@@ -295,8 +280,6 @@ void Parser::PatternRewriter::VisitVariableProxy(VariableProxy* pattern) {
     DCHECK_NOT_NULL(proxy);
     DCHECK_NOT_NULL(proxy->var());
     DCHECK_NOT_NULL(value);
-    //printf("VisitVariableProxy (branch for lex)\n");
-    //printf("IsSubPattern: %s\n", IsSubPattern() ? "true" : "false");
     // Add break location for destructured sub-pattern.
     int pos = IsSubPattern() ? pattern->position() : value->position();
     Assignment* assignment =
@@ -342,16 +325,13 @@ Variable* Parser::PatternRewriter::CreateTempVar(Expression* value) {
 void Parser::PatternRewriter::VisitRewritableExpression(
     RewritableExpression* node) {
   // If this is not a destructuring assignment...
-  //printf("VisitRewritableExpression\n");
   if (!IsAssignmentContext() || !node->expression()->IsAssignment()) {
-    //printf("  performing BindingPattern rewriting\n");
     // Mark the node as rewritten to prevent redundant rewriting, and
     // perform BindingPattern rewriting
     DCHECK(!node->is_rewritten());
     node->Rewrite(node->expression());
     return node->expression()->Accept(this);
   }
-  //printf("  preforming AssignmentPattern rewriting (I think)\n");
 
   if (node->is_rewritten()) return;
   DCHECK(IsAssignmentContext());
@@ -400,7 +380,6 @@ void Parser::PatternRewriter::VisitRewritableExpression(
     block_->statements()->Add(factory()->NewExpressionStatement(expr, pos),
                               zone());
   }
-  printf("Calling from VisitRewritableExpression\n");
   return set_context(old_context);
 }
 
@@ -417,7 +396,6 @@ void Parser::PatternRewriter::VisitObjectLiteral(ObjectLiteral* pattern,
         property->value(),
         factory()->NewProperty(factory()->NewVariableProxy(temp),
                                property->key(), RelocInfo::kNoPosition));
-    printf("Calling from VisitObjectLiteral\n");
     set_context(context);
   }
 }
@@ -561,7 +539,6 @@ void Parser::PatternRewriter::VisitArrayLiteral(ArrayLiteral* node,
             factory()->NewExpressionStatement(assignment, nopos), zone());
       }
     }
-    printf("Calling from VisitArrayLiteral\n");
     set_context(context);
   }
 
@@ -629,7 +606,6 @@ void Parser::PatternRewriter::VisitAssignment(Assignment* node) {
   // temp = <value>;
   // <pattern> = temp === undefined ? <init> : temp;
   DCHECK_EQ(Token::ASSIGN, node->op());
-  //printf("VisitAssignment\n");
 
   auto initializer = node->value();
   auto value = initializer;
@@ -654,7 +630,6 @@ void Parser::PatternRewriter::VisitAssignment(Assignment* node) {
 
   PatternContext old_context = SetAssignmentContextIfNeeded(initializer);
   RecurseIntoSubpattern(node->target(), value);
-  printf("Calling from VisitAssignment\n");
   set_context(old_context);
 }
 
@@ -664,7 +639,6 @@ void Parser::PatternRewriter::VisitAssignment(Assignment* node) {
 void Parser::PatternRewriter::VisitProperty(v8::internal::Property* node) {
   DCHECK(IsAssignmentContext());
   auto value = current_value_;
-  //printf("VisitProperty\n");
 
   Assignment* assignment =
       factory()->NewAssignment(Token::ASSIGN, node, value, node->position());
