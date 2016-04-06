@@ -83,7 +83,7 @@ Parser::PatternRewriter::SetAssignmentContextIfNeeded(Expression* node) {
   // SingleNameBinding. Such expressions should not prompt a change in the
   // pattern's context.
   if (node->IsAssignment() && node->AsAssignment()->op() == Token::ASSIGN &&
-    !IsInitializerContext()) {
+      !IsInitializerContext()) {
     set_context(ASSIGNMENT);
   }
   return old_context;
