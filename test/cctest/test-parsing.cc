@@ -6210,30 +6210,6 @@ TEST(DestructuringNegativeTests) {
     RunParserSyncTest(context_data, data, kError, NULL, 0, always_flags,
                       arraysize(always_flags));
   }
-
-  { // Redeclaration-specific errors
-    const char* context_data[][2] = {{"let x; var ", " = {};"},
-                                     {"let x; let ", " = {};"},
-                                     {"let x; const ", " = {};"},
-                                     {"let x; for (var ", " = {};;) {}"},
-                                     {"let x; for (let ", " = {};;) {}"},
-                                     {"let x; for (const ", " = {};;) {}"},
-                                     {NULL, NULL}};
-
-    // clang-format off
-    const char* data[] = {
-      //"{ x }",
-      //"{ x: x }",
-      //"[ x ]",
-      "{ x = y = null }",
-      "{ x: x = y = null }",
-      "[ x = y = null ]",
-      NULL};
-    // clang-format on
-    static const ParserFlag always_flags[] = {kAllowHarmonySloppyLet};
-    RunParserSyncTest(context_data, data, kError, NULL, 0, always_flags,
-                      arraysize(always_flags));
-  }
 }
 
 
