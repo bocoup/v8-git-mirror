@@ -2008,25 +2008,28 @@ TEST(NoErrorsEvalAndArgumentsStrict) {
   RunParserSyncTest(context_data, statement_data, kSuccess);
 }
 
+#define FUTURE_STRICT_RESERVED_WORDS_NO_LET(V) \
+  V(implements)                                \
+  V(interface)                                 \
+  V(package)                                   \
+  V(private)                                   \
+  V(protected)                                 \
+  V(public)                                    \
+  V(static)                                    \
+  V(yield)
 
 #define FUTURE_STRICT_RESERVED_WORDS(V) \
-  V(implements)                         \
-  V(interface)                          \
   V(let)                                \
-  V(package)                            \
-  V(private)                            \
-  V(protected)                          \
-  V(public)                             \
-  V(static)                             \
-  V(yield)
+  FUTURE_STRICT_RESERVED_WORDS_NO_LET(V)
 
+#define LIMITED_FUTURE_STRICT_RESERVED_WORDS_NO_LET(V) \
+  V(implements)                                        \
+  V(static)                                            \
+  V(yield)
 
 #define LIMITED_FUTURE_STRICT_RESERVED_WORDS(V) \
-  V(implements)                                 \
   V(let)                                        \
-  V(static)                                     \
-  V(yield)
-
+  LIMITED_FUTURE_STRICT_RESERVED_WORDS_NO_LET(V)
 
 #define FUTURE_STRICT_RESERVED_STATEMENTS(NAME) \
   "var " #NAME ";",                             \
@@ -2042,6 +2045,13 @@ TEST(NoErrorsEvalAndArgumentsStrict) {
   "++" #NAME ";",                               \
   #NAME " ++;",
 
+// clang-format off
+#define FUTURE_STRICT_RESERVED_LET_BINDINGS(NAME) \
+  "let " #NAME ";",                               \
+  "for (let " #NAME "; false; ) {}",              \
+  "for (let " #NAME " in {}) {}",                 \
+  "for (let " #NAME " of []) {}",
+// clang-format on
 
 TEST(ErrorsFutureStrictReservedWords) {
   // Tests that both preparsing and parsing produce the right kind of errors for
@@ -2053,14 +2063,17 @@ TEST(ErrorsFutureStrictReservedWords) {
       {"() => { \"use strict\"; ", "}"},
       {NULL, NULL}};
 
+  // clang-format off
   const char* statement_data[] {
     LIMITED_FUTURE_STRICT_RESERVED_WORDS(FUTURE_STRICT_RESERVED_STATEMENTS)
+    LIMITED_FUTURE_STRICT_RESERVED_WORDS_NO_LET(
+      FUTURE_STRICT_RESERVED_LET_BINDINGS)
     NULL
   };
+  // clang-format on
 
   RunParserSyncTest(context_data, statement_data, kError);
 }
-
 
 #undef LIMITED_FUTURE_STRICT_RESERVED_WORDS
 
@@ -2073,10 +2086,13 @@ TEST(NoErrorsFutureStrictReservedWords) {
     { NULL, NULL }
   };
 
+  // clang-format off
   const char* statement_data[] = {
     FUTURE_STRICT_RESERVED_WORDS(FUTURE_STRICT_RESERVED_STATEMENTS)
+    FUTURE_STRICT_RESERVED_WORDS_NO_LET(FUTURE_STRICT_RESERVED_LET_BINDINGS)
     NULL
   };
+  // clang-format on
 
   RunParserSyncTest(context_data, statement_data, kSuccess);
 }
