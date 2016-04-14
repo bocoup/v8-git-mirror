@@ -2871,6 +2871,8 @@ bool ParserBase<Traits>::IsNextLetKeyword() {
     case Token::YIELD:
     case Token::AWAIT:
       return true;
+    case Token::FUTURE_STRICT_RESERVED_WORD:
+      return is_sloppy(language_mode());
     default:
       return false;
   }
