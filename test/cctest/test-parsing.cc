@@ -2082,16 +2082,12 @@ TEST(ErrorsFutureStrictReservedWords) {
   // > LexicalDeclaration : LetOrConst BindingList ;
   // >
   // > - It is a Syntax Error if the BoundNames of BindingList contains "let".
-  const char* non_strict_contexts[][2] = {
-    { "", "" },
-    { "function test_func() {", "}"},
-    { "() => {", "}" },
-    { NULL, NULL }
-  };
-  const char* invalid_statements[] = {
-    FUTURE_STRICT_RESERVED_LEX_BINDINGS("let")
-    NULL
-  };
+  const char* non_strict_contexts[][2] = {{"", ""},
+                                          {"function test_func() {", "}"},
+                                          {"() => {", "}"},
+                                          {NULL, NULL}};
+  const char* invalid_statements[] = {FUTURE_STRICT_RESERVED_LEX_BINDINGS("let")
+                                          NULL};
 
   RunParserSyncTest(non_strict_contexts, invalid_statements, kError);
 }
