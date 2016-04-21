@@ -2046,11 +2046,15 @@ TEST(NoErrorsEvalAndArgumentsStrict) {
   #NAME " ++;",
 
 // clang-format off
-#define FUTURE_STRICT_RESERVED_LET_BINDINGS(NAME) \
+#define FUTURE_STRICT_RESERVED_LEX_BINDINGS(NAME) \
   "let " #NAME ";",                               \
   "for (let " #NAME "; false; ) {}",              \
   "for (let " #NAME " in {}) {}",                 \
-  "for (let " #NAME " of []) {}",
+  "for (let " #NAME " of []) {}",                 \
+  "const " #NAME " = null;",                      \
+  "for (const " #NAME " = null; false; ) {}",     \
+  "for (const " #NAME " in {}) {}",               \
+  "for (const " #NAME " of []) {}",
 // clang-format on
 
 TEST(ErrorsFutureStrictReservedWords) {
@@ -2058,7 +2062,7 @@ TEST(ErrorsFutureStrictReservedWords) {
   // using future strict reserved words as identifiers. Without the strict mode,
   // it's ok to use future strict reserved words as identifiers. With the strict
   // mode, it isn't.
-  const char* context_data[][2] = {
+  const char* strict_contexts[][2] = {
       {"function test_func() {\"use strict\"; ", "}"},
       {"() => { \"use strict\"; ", "}"},
       {NULL, NULL}};
@@ -2066,13 +2070,30 @@ TEST(ErrorsFutureStrictReservedWords) {
   // clang-format off
   const char* statement_data[] {
     LIMITED_FUTURE_STRICT_RESERVED_WORDS(FUTURE_STRICT_RESERVED_STATEMENTS)
-    LIMITED_FUTURE_STRICT_RESERVED_WORDS_NO_LET(
-      FUTURE_STRICT_RESERVED_LET_BINDINGS)
+    LIMITED_FUTURE_STRICT_RESERVED_WORDS(FUTURE_STRICT_RESERVED_LEX_BINDINGS)
     NULL
   };
   // clang-format on
 
-  RunParserSyncTest(context_data, statement_data, kError);
+  RunParserSyncTest(strict_contexts, statement_data, kError);
+
+  // From ES2015, 13.3.1.1 Static Semantics: Early Errors:
+  //
+  // > LexicalDeclaration : LetOrConst BindingList ;
+  // >
+  // > - It is a Syntax Error if the BoundNames of BindingList contains "let".
+  const char* non_strict_contexts[][2] = {
+    { "", "" },
+    { "function test_func() {", "}"},
+    { "() => {", "}" },
+    { NULL, NULL }
+  };
+  const char* invalid_statements[] = {
+    FUTURE_STRICT_RESERVED_LEX_BINDINGS("let")
+    NULL
+  };
+
+  RunParserSyncTest(non_strict_contexts, invalid_statements, kError);
 }
 
 #undef LIMITED_FUTURE_STRICT_RESERVED_WORDS
@@ -2089,7 +2110,7 @@ TEST(NoErrorsFutureStrictReservedWords) {
   // clang-format off
   const char* statement_data[] = {
     FUTURE_STRICT_RESERVED_WORDS(FUTURE_STRICT_RESERVED_STATEMENTS)
-    FUTURE_STRICT_RESERVED_WORDS_NO_LET(FUTURE_STRICT_RESERVED_LET_BINDINGS)
+    FUTURE_STRICT_RESERVED_WORDS_NO_LET(FUTURE_STRICT_RESERVED_LEX_BINDINGS)
     NULL
   };
   // clang-format on
