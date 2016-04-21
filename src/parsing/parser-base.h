@@ -2867,7 +2867,6 @@ bool ParserBase<Traits>::IsNextLetKeyword() {
     case Token::LBRACK:
     case Token::IDENTIFIER:
     case Token::STATIC:
-    case Token::LET:  // Yes, you can do let let = ... in sloppy mode
     case Token::YIELD:
     case Token::AWAIT:
       return true;
