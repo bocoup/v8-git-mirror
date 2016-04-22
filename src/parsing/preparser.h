@@ -984,9 +984,6 @@ class PreParser : public ParserBase<PreParserTraits> {
     PreParserFactory factory(NULL);
     FunctionState top_scope(&function_state_, &scope_, scope, kNormalFunction,
                             &factory);
-    if (is_module) {
-      scope_->SetLanguageMode(static_cast<LanguageMode>(STRICT));
-    }
     bool ok = true;
     int start_position = scanner()->peek_location().beg_pos;
     parsing_module_ = is_module;
