@@ -5630,7 +5630,6 @@ TEST(ImportExportParsingErrors) {
   }
 }
 
-
 TEST(ModuleTopLevelFunctionDecl) {
   // clang-format off
   const char* kErrorSources[] = {
@@ -5667,7 +5666,6 @@ TEST(ModuleTopLevelFunctionDecl) {
     CHECK(!parser.Parse(&info));
   }
 }
-
 
 TEST(ModuleAwaitReserved) {
   // clang-format off
@@ -5808,7 +5806,6 @@ TEST(EnumReserved) {
   RunModuleParserSyncTest(context_data, kErrorSources, kError, NULL, 0, NULL,
                           0);
 }
-
 
 TEST(ModuleParsingInternals) {
   i::Isolate* isolate = CcTest::i_isolate();
