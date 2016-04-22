@@ -920,14 +920,13 @@ FunctionLiteral* Parser::DoParseProgram(ParseInfo* info) {
     ZoneList<Statement*>* body = new(zone()) ZoneList<Statement*>(16, zone());
     bool ok = true;
     int beg_pos = scanner()->location().beg_pos;
-    if (info->is_module()) {
-      parsing_module_ = true;
+    parsing_module_ = info->is_module();
+    if (parsing_module_) {
       ParseModuleItemList(body, &ok);
     } else {
       // Don't count the mode in the use counters--give the program a chance
       // to enable script-wide strict mode below.
       scope_->SetLanguageMode(info->language_mode());
-      parsing_module_ = false;
       ParseStatementList(body, Token::EOS, &ok);
     }
 
