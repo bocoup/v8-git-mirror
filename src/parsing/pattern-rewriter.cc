@@ -435,6 +435,7 @@ void Parser::PatternRewriter::VisitArrayLiteral(ArrayLiteral* node,
       spread = value->AsSpread();
       break;
     }
+    bool isSubpattern = value->IsObjectLiteral() || value->IsArrayLiteral();
 
     PatternContext context = SetInitializerContextIfNeeded(value);
 
@@ -512,9 +513,28 @@ void Parser::PatternRewriter::VisitArrayLiteral(ArrayLiteral* node,
           next_block, factory()->NewEmptyStatement(RelocInfo::kNoPosition),
           RelocInfo::kNoPosition);
     }
+    // Ensure that non-pattern targets are evaluated prior to iterator
+    // advancement,
+    //
+    // value = do {
+    //   if_not_done;
+    //   v;
+    // };
+    if (!isSubpattern) {
+      Block* block = factory()->NewBlock(nullptr, 2, true, nopos);
+      block->statements()->Add(if_not_done, zone());
+      block->statements()->Add(factory()->NewExpressionStatement(factory()->NewVariableProxy(v), nopos), zone());
+      // Throwaway temp var to satisfy the DoExpression constructor -- looks
+      // like this is the only way to get the result of the expression, though.
+      // If so, DoExpression may not be the answer, since we need to assign to
+      // the Reference produced from evaluating `value`.
+      DoExpression* doBlock = factory()->NewDoExpression(block, CreateTempVar(), nopos);
+      auto assign = factory()->NewAssignment(Token::ASSIGN, value, doBlock, nopos);
+      if_not_done = factory()->NewExpressionStatement(assign, nopos);
+    }
     block_->statements()->Add(if_not_done, zone());
 
-    if (!(value->IsLiteral() && value->AsLiteral()->raw_value()->IsTheHole())) {
+    if (isSubpattern && !(value->IsLiteral() && value->AsLiteral()->raw_value()->IsTheHole())) {
       if (FLAG_harmony_iterator_close) {
         // completion = kAbruptCompletion;
         Expression* proxy = factory()->NewVariableProxy(completion);
