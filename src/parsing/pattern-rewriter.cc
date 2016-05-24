@@ -439,6 +439,23 @@ void Parser::PatternRewriter::VisitArrayLiteral(ArrayLiteral* node,
 
     PatternContext context = SetInitializerContextIfNeeded(value);
 
+    // This is another idea for an alternative re-writing. It's ugly as sin, and
+    // it relies on the grouping operator, which apparently cannot be
+    // syntesized with AstNodeFactory. I can't win today.
+    // value =
+    //   done ?
+    //     undefined :
+    //     (
+    //       done = true,
+    //       result = IteratorNext(iterator),
+    //       result.done ?
+    //         v = undefined :
+    //         (
+    //           v = result.value,
+    //           done = false
+    //         ),
+    //       v
+    //     );
     // if (!done) {
     //   done = true;  // If .next, .done or .value throws, don't close.
     //   result = IteratorNext(iterator);
