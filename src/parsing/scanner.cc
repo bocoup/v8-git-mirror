@@ -42,6 +42,7 @@ Scanner::Scanner(UnicodeCache* unicode_cache)
       octal_pos_(Location::invalid()),
       decimal_with_leading_zero_pos_(Location::invalid()),
       found_html_comment_(false),
+      module_(false),
       allow_harmony_exponentiation_operator_(false) {
   bookmark_current_.literal_chars = &bookmark_current_literal_;
   bookmark_current_.raw_literal_chars = &bookmark_current_raw_literal_;
@@ -329,7 +330,7 @@ bool Scanner::SkipWhiteSpace() {
       Advance();
       if (c0_ == '-') {
         Advance();
-        if (c0_ == '>') {
+        if (c0_ == '>' && !module_) {
           // Treat the rest of the line as a comment.
           SkipSingleLineComment();
           // Continue skipping white space after the comment.
@@ -454,7 +455,7 @@ Token::Value Scanner::ScanHtmlComment() {
   Advance();
   if (c0_ == '-') {
     Advance();
-    if (c0_ == '-') {
+    if (c0_ == '-' && !module_) {
       found_html_comment_ = true;
       return SkipSingleLineComment();
     }
@@ -564,7 +565,7 @@ void Scanner::Scan() {
         Advance();
         if (c0_ == '-') {
           Advance();
-          if (c0_ == '>' && has_line_terminator_before_next_) {
+          if (c0_ == '>' && has_line_terminator_before_next_ && !module_) {
             // For compatibility with SpiderMonkey, we skip lines that
             // start with an HTML comment end '-->'.
             token = SkipSingleLineComment();

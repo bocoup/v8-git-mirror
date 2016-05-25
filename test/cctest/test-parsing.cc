@@ -108,83 +108,6 @@ TEST(ScanKeywords) {
 }
 
 
-TEST(ScanHTMLEndComments) {
-  v8::V8::Initialize();
-  v8::Isolate* isolate = CcTest::isolate();
-  v8::HandleScope handles(isolate);
-
-  // Regression test. See:
-  //    http://code.google.com/p/chromium/issues/detail?id=53548
-  // Tests that --> is correctly interpreted as comment-to-end-of-line if there
-  // is only whitespace before it on the line (with comments considered as
-  // whitespace, even a multiline-comment containing a newline).
-  // This was not the case if it occurred before the first real token
-  // in the input.
-  const char* tests[] = {
-      // Before first real token.
-      "--> is eol-comment\nvar y = 37;\n",
-      "\n --> is eol-comment\nvar y = 37;\n",
-      "/* precomment */ --> is eol-comment\nvar y = 37;\n",
-      "\n/* precomment */ --> is eol-comment\nvar y = 37;\n",
-      // After first real token.
-      "var x = 42;\n--> is eol-comment\nvar y = 37;\n",
-      "var x = 42;\n/* precomment */ --> is eol-comment\nvar y = 37;\n",
-      NULL
-  };
-
-  const char* fail_tests[] = {
-      "x --> is eol-comment\nvar y = 37;\n",
-      "\"\\n\" --> is eol-comment\nvar y = 37;\n",
-      "x/* precomment */ --> is eol-comment\nvar y = 37;\n",
-      "x/* precomment\n */ --> is eol-comment\nvar y = 37;\n",
-      "var x = 42; --> is eol-comment\nvar y = 37;\n",
-      "var x = 42; /* precomment\n */ --> is eol-comment\nvar y = 37;\n",
-      NULL
-  };
-
-  // Parser/Scanner needs a stack limit.
-  CcTest::i_isolate()->stack_guard()->SetStackLimit(
-      i::GetCurrentStackPosition() - 128 * 1024);
-  uintptr_t stack_limit = CcTest::i_isolate()->stack_guard()->real_climit();
-  for (int i = 0; tests[i]; i++) {
-    const i::byte* source =
-        reinterpret_cast<const i::byte*>(tests[i]);
-    i::Utf8ToUtf16CharacterStream stream(source, i::StrLength(tests[i]));
-    i::CompleteParserRecorder log;
-    i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-    scanner.Initialize(&stream);
-    i::Zone zone(CcTest::i_isolate()->allocator());
-    i::AstValueFactory ast_value_factory(
-        &zone, CcTest::i_isolate()->heap()->HashSeed());
-    i::PreParser preparser(&zone, &scanner, &ast_value_factory, &log,
-                           stack_limit);
-    preparser.set_allow_lazy(true);
-    i::PreParser::PreParseResult result = preparser.PreParseProgram();
-    CHECK_EQ(i::PreParser::kPreParseSuccess, result);
-    CHECK(!log.HasError());
-  }
-
-  for (int i = 0; fail_tests[i]; i++) {
-    const i::byte* source =
-        reinterpret_cast<const i::byte*>(fail_tests[i]);
-    i::Utf8ToUtf16CharacterStream stream(source, i::StrLength(fail_tests[i]));
-    i::CompleteParserRecorder log;
-    i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-    scanner.Initialize(&stream);
-    i::Zone zone(CcTest::i_isolate()->allocator());
-    i::AstValueFactory ast_value_factory(
-        &zone, CcTest::i_isolate()->heap()->HashSeed());
-    i::PreParser preparser(&zone, &scanner, &ast_value_factory, &log,
-                           stack_limit);
-    preparser.set_allow_lazy(true);
-    i::PreParser::PreParseResult result = preparser.PreParseProgram();
-    // Even in the case of a syntax error, kPreParseSuccess is returned.
-    CHECK_EQ(i::PreParser::kPreParseSuccess, result);
-    CHECK(log.HasError());
-  }
-}
-
-
 class ScriptResource : public v8::String::ExternalOneByteStringResource {
  public:
   ScriptResource(const char* data, size_t length)
@@ -5679,6 +5602,94 @@ TEST(ImportExportParsingErrors) {
     CHECK(!parser.Parse(&info));
   }
 }
+
+
+TEST(ScanHTMLEndComments) {
+  v8::V8::Initialize();
+  v8::Isolate* isolate = CcTest::isolate();
+  v8::HandleScope handles(isolate);
+
+  // Regression test. See:
+  //    http://code.google.com/p/chromium/issues/detail?id=53548
+  // Tests that --> is correctly interpreted as comment-to-end-of-line if there
+  // is only whitespace before it on the line (with comments considered as
+  // whitespace, even a multiline-comment containing a newline).
+  // This was not the case if it occurred before the first real token
+  // in the input.
+  const char* tests[] = {
+      // Before first real token.
+      "--> is eol-comment\nvar y = 37;\n",
+      "\n --> is eol-comment\nvar y = 37;\n",
+      "/* precomment */ --> is eol-comment\nvar y = 37;\n",
+      "\n/* precomment */ --> is eol-comment\nvar y = 37;\n",
+      // After first real token.
+      "var x = 42;\n--> is eol-comment\nvar y = 37;\n",
+      "var x = 42;\n/* precomment */ --> is eol-comment\nvar y = 37;\n",
+      NULL
+  };
+
+  const char* fail_tests[] = {
+      "x --> is eol-comment\nvar y = 37;\n",
+      "\"\\n\" --> is eol-comment\nvar y = 37;\n",
+      "x/* precomment */ --> is eol-comment\nvar y = 37;\n",
+      "x/* precomment\n */ --> is eol-comment\nvar y = 37;\n",
+      "var x = 42; --> is eol-comment\nvar y = 37;\n",
+      "var x = 42; /* precomment\n */ --> is eol-comment\nvar y = 37;\n",
+      NULL
+  };
+
+  // Parser/Scanner needs a stack limit.
+  CcTest::i_isolate()->stack_guard()->SetStackLimit(
+      i::GetCurrentStackPosition() - 128 * 1024);
+  uintptr_t stack_limit = CcTest::i_isolate()->stack_guard()->real_climit();
+  for (int i = 0; tests[i]; i++) {
+    const i::byte* source =
+        reinterpret_cast<const i::byte*>(tests[i]);
+    i::Utf8ToUtf16CharacterStream stream(source, i::StrLength(tests[i]));
+    i::CompleteParserRecorder log;
+    i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
+    scanner.Initialize(&stream);
+    i::Zone zone(CcTest::i_isolate()->allocator());
+    i::AstValueFactory ast_value_factory(
+        &zone, CcTest::i_isolate()->heap()->HashSeed());
+    i::PreParser preparser(&zone, &scanner, &ast_value_factory, &log,
+                           stack_limit);
+    preparser.set_allow_lazy(true);
+    i::PreParser::PreParseResult result = preparser.PreParseProgram();
+    CHECK_EQ(i::PreParser::kPreParseSuccess, result);
+    CHECK(!log.HasError());
+  }
+
+  for (int i = 0; fail_tests[i]; i++) {
+    const i::byte* source =
+        reinterpret_cast<const i::byte*>(fail_tests[i]);
+    i::Utf8ToUtf16CharacterStream stream(source, i::StrLength(fail_tests[i]));
+    i::CompleteParserRecorder log;
+    i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
+    scanner.Initialize(&stream);
+    i::Zone zone(CcTest::i_isolate()->allocator());
+    i::AstValueFactory ast_value_factory(
+        &zone, CcTest::i_isolate()->heap()->HashSeed());
+    i::PreParser preparser(&zone, &scanner, &ast_value_factory, &log,
+                           stack_limit);
+    preparser.set_allow_lazy(true);
+    i::PreParser::PreParseResult result = preparser.PreParseProgram();
+    // Even in the case of a syntax error, kPreParseSuccess is returned.
+    CHECK_EQ(i::PreParser::kPreParseSuccess, result);
+    CHECK(log.HasError());
+  }
+
+  // ES2015 B.1.3 HTML-like Comments:
+  //
+  // > The syntax and semantics of 11.4 is extended as follows except that this
+  // > extension is not allowed when parsing source code using the goal symbol
+  // > Module
+  const char* context_data[][2] = {{"", ""}, {NULL, NULL}};
+
+  RunModuleParserSyncTest(context_data, tests, kError);
+  RunModuleParserSyncTest(context_data, fail_tests, kError);
+}
+
 
 TEST(ModuleTopLevelFunctionDecl) {
   // clang-format off
