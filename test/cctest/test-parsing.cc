@@ -5603,7 +5603,6 @@ TEST(ImportExportParsingErrors) {
   }
 }
 
-
 TEST(ScanHTMLEndComments) {
   v8::V8::Initialize();
   v8::Isolate* isolate = CcTest::isolate();
@@ -5689,7 +5688,6 @@ TEST(ScanHTMLEndComments) {
   RunModuleParserSyncTest(context_data, tests, kError);
   RunModuleParserSyncTest(context_data, fail_tests, kError);
 }
-
 
 TEST(ModuleTopLevelFunctionDecl) {
   // clang-format off
