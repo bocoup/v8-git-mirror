@@ -474,7 +474,7 @@ class Scanner {
 
   bool FoundHtmlComment() const { return found_html_comment_; }
 
-  void set_module(bool module) { module_ = module; }
+  void set_allow_html_comments(bool allow) { allow_html_comments_ = allow; }
 
 #define DECLARE_ACCESSORS(name)                                \
   inline bool allow_##name() const { return allow_##name##_; } \
@@ -806,8 +806,8 @@ class Scanner {
   // Whether this scanner encountered an HTML comment.
   bool found_html_comment_;
 
-  // Whether this scanner is currently scanning ECMAScript module code
-  bool module_;
+  // Whether this scanner should recognize HTML-like comment tokens.
+  bool allow_html_comments_;
 
   bool allow_harmony_exponentiation_operator_;
 

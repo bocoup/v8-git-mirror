@@ -934,7 +934,7 @@ FunctionLiteral* Parser::DoParseProgram(ParseInfo* info) {
     bool ok = true;
     int beg_pos = scanner()->location().beg_pos;
     parsing_module_ = info->is_module();
-    scanner_.set_module(parsing_module_);
+    scanner_.set_allow_html_comments(parsing_module_);
     if (parsing_module_) {
       ParseModuleItemList(body, &ok);
     } else {
