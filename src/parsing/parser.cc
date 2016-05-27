@@ -853,10 +853,12 @@ FunctionLiteral* Parser::ParseProgram(Isolate* isolate, ParseInfo* info) {
     // identical calls.
     ExternalTwoByteStringUtf16CharacterStream stream(
         Handle<ExternalTwoByteString>::cast(source), 0, source->length());
+    scanner_.set_allow_html_comments(!info->is_module());
     scanner_.Initialize(&stream);
     result = DoParseProgram(info);
   } else {
     GenericStringUtf16CharacterStream stream(source, 0, source->length());
+    scanner_.set_allow_html_comments(!info->is_module());
     scanner_.Initialize(&stream);
     result = DoParseProgram(info);
   }
@@ -934,7 +936,6 @@ FunctionLiteral* Parser::DoParseProgram(ParseInfo* info) {
     bool ok = true;
     int beg_pos = scanner()->location().beg_pos;
     parsing_module_ = info->is_module();
-    scanner_.set_allow_html_comments(parsing_module_);
     if (parsing_module_) {
       ParseModuleItemList(body, &ok);
     } else {
@@ -1045,6 +1046,7 @@ static FunctionLiteral::FunctionType ComputeFunctionType(
 FunctionLiteral* Parser::ParseLazy(Isolate* isolate, ParseInfo* info,
                                    Utf16CharacterStream* source) {
   Handle<SharedFunctionInfo> shared_info = info->shared_info();
+  scanner_.set_allow_html_comments(!info->is_module());
   scanner_.Initialize(source);
   DCHECK(scope_ == NULL);
   DCHECK(target_stack_ == NULL);
@@ -5256,6 +5258,7 @@ void Parser::ParseOnBackground(ParseInfo* info) {
   DCHECK(info->source_stream() != NULL);
   ExternalStreamingStream stream(info->source_stream(),
                                  info->source_stream_encoding());
+  scanner_.set_allow_html_comments(!info->is_module());
   scanner_.Initialize(&stream);
   DCHECK(info->context().is_null() || info->context()->IsNativeContext());
 

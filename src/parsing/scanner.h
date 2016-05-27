@@ -806,7 +806,9 @@ class Scanner {
   // Whether this scanner encountered an HTML comment.
   bool found_html_comment_;
 
-  // Whether this scanner should recognize HTML-like comment tokens.
+  // Whether this scanner should interpret character sequences describing HTML
+  // comments as JavaScript comment delimiters (as per ES2015 section B.1.3,
+  // "HTML-like Comments")
   bool allow_html_comments_;
 
   bool allow_harmony_exponentiation_operator_;
