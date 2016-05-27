@@ -50,8 +50,8 @@ Scanner::Scanner(UnicodeCache* unicode_cache)
   bookmark_next_.raw_literal_chars = &bookmark_next_raw_literal_;
 }
 
-
-void Scanner::Initialize(Utf16CharacterStream* source, bool allow_html_comments) {
+void Scanner::Initialize(Utf16CharacterStream* source,
+                         bool allow_html_comments) {
   source_ = source;
   // Need to capture identifiers in order to recognize "get" and "set"
   // in object literals.
@@ -327,7 +327,8 @@ bool Scanner::SkipWhiteSpace() {
     // line (with only whitespace in front of it), we treat the rest
     // of the line as a comment. This is in line with the way
     // SpiderMonkey handles it.
-    if (c0_ == '-' && has_line_terminator_before_next_ && allow_html_comments_) {
+    if (c0_ == '-' && has_line_terminator_before_next_ &&
+        allow_html_comments_) {
       Advance();
       if (c0_ == '-') {
         Advance();
