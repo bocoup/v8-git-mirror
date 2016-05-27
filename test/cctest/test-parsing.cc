@@ -1481,6 +1481,7 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
     i::PreParser preparser(&zone, &scanner, &ast_value_factory, &log,
                            stack_limit);
     SetParserFlags(&preparser, flags);
+    scanner.set_allow_html_comments(!is_module);
     scanner.Initialize(&stream);
     i::PreParser::PreParseResult result =
         preparser.PreParseProgram(&preparser_materialized_literals, is_module);
