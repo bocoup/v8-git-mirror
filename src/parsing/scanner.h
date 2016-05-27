@@ -349,7 +349,7 @@ class Scanner {
 
   explicit Scanner(UnicodeCache* scanner_contants);
 
-  void Initialize(Utf16CharacterStream* source);
+  void Initialize(Utf16CharacterStream* source, bool allow_html_comments);
 
   // Returns the next token and advances input.
   Token::Value Next();
@@ -473,8 +473,6 @@ class Scanner {
   bool IdentifierIsFutureStrictReserved(const AstRawString* string) const;
 
   bool FoundHtmlComment() const { return found_html_comment_; }
-
-  void set_allow_html_comments(bool allow) { allow_html_comments_ = allow; }
 
 #define DECLARE_ACCESSORS(name)                                \
   inline bool allow_##name() const { return allow_##name##_; } \

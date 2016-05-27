@@ -71,7 +71,7 @@ TEST(ScanKeywords) {
     {
       i::Utf8ToUtf16CharacterStream stream(keyword, length);
       i::Scanner scanner(&unicode_cache);
-      scanner.Initialize(&stream);
+      scanner.Initialize(&stream, true);
       CHECK_EQ(key_token.token, scanner.Next());
       CHECK_EQ(i::Token::EOS, scanner.Next());
     }
@@ -79,7 +79,7 @@ TEST(ScanKeywords) {
     {
       i::Utf8ToUtf16CharacterStream stream(keyword, length - 1);
       i::Scanner scanner(&unicode_cache);
-      scanner.Initialize(&stream);
+      scanner.Initialize(&stream, true);
       CHECK_EQ(i::Token::IDENTIFIER, scanner.Next());
       CHECK_EQ(i::Token::EOS, scanner.Next());
     }
@@ -90,7 +90,7 @@ TEST(ScanKeywords) {
       buffer[length] = chars_to_append[j];
       i::Utf8ToUtf16CharacterStream stream(buffer, length + 1);
       i::Scanner scanner(&unicode_cache);
-      scanner.Initialize(&stream);
+      scanner.Initialize(&stream, true);
       CHECK_EQ(i::Token::IDENTIFIER, scanner.Next());
       CHECK_EQ(i::Token::EOS, scanner.Next());
     }
@@ -100,7 +100,7 @@ TEST(ScanKeywords) {
       buffer[length - 1] = '_';
       i::Utf8ToUtf16CharacterStream stream(buffer, length);
       i::Scanner scanner(&unicode_cache);
-      scanner.Initialize(&stream);
+      scanner.Initialize(&stream, true);
       CHECK_EQ(i::Token::IDENTIFIER, scanner.Next());
       CHECK_EQ(i::Token::EOS, scanner.Next());
     }
@@ -253,7 +253,7 @@ TEST(StandAlonePreParser) {
         static_cast<unsigned>(strlen(program)));
     i::CompleteParserRecorder log;
     i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-    scanner.Initialize(&stream);
+    scanner.Initialize(&stream, true);
 
     i::Zone zone(CcTest::i_isolate()->allocator());
     i::AstValueFactory ast_value_factory(
@@ -289,7 +289,7 @@ TEST(StandAlonePreParserNoNatives) {
         static_cast<unsigned>(strlen(program)));
     i::CompleteParserRecorder log;
     i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-    scanner.Initialize(&stream);
+    scanner.Initialize(&stream, true);
 
     // Preparser defaults to disallowing natives syntax.
     i::Zone zone(CcTest::i_isolate()->allocator());
@@ -360,7 +360,7 @@ TEST(RegressChromium62639) {
       static_cast<unsigned>(strlen(program)));
   i::CompleteParserRecorder log;
   i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-  scanner.Initialize(&stream);
+  scanner.Initialize(&stream, true);
   i::Zone zone(CcTest::i_isolate()->allocator());
   i::AstValueFactory ast_value_factory(&zone,
                                        CcTest::i_isolate()->heap()->HashSeed());
@@ -395,7 +395,7 @@ TEST(Regress928) {
   i::GenericStringUtf16CharacterStream stream(source, 0, source->length());
   i::CompleteParserRecorder log;
   i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-  scanner.Initialize(&stream);
+  scanner.Initialize(&stream, true);
   i::Zone zone(CcTest::i_isolate()->allocator());
   i::AstValueFactory ast_value_factory(&zone,
                                        CcTest::i_isolate()->heap()->HashSeed());
@@ -447,7 +447,7 @@ TEST(PreParseOverflow) {
       static_cast<unsigned>(kProgramSize));
   i::CompleteParserRecorder log;
   i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-  scanner.Initialize(&stream);
+  scanner.Initialize(&stream, true);
 
   i::Zone zone(CcTest::i_isolate()->allocator());
   i::AstValueFactory ast_value_factory(&zone,
@@ -677,7 +677,7 @@ void TestStreamScanner(i::Utf16CharacterStream* stream,
                        int skip_pos = 0,  // Zero means not skipping.
                        int skip_to = 0) {
   i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-  scanner.Initialize(stream);
+  scanner.Initialize(stream, true);
 
   int i = 0;
   do {
@@ -760,7 +760,7 @@ void TestScanRegExp(const char* re_source, const char* expected) {
        static_cast<unsigned>(strlen(re_source)));
   i::HandleScope scope(CcTest::i_isolate());
   i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-  scanner.Initialize(&stream);
+  scanner.Initialize(&stream, true);
 
   i::Token::Value start = scanner.peek();
   CHECK(start == i::Token::DIV || start == i::Token::ASSIGN_DIV);
@@ -1481,8 +1481,7 @@ void TestParserSyncWithFlags(i::Handle<i::String> source,
     i::PreParser preparser(&zone, &scanner, &ast_value_factory, &log,
                            stack_limit);
     SetParserFlags(&preparser, flags);
-    scanner.set_allow_html_comments(!is_module);
-    scanner.Initialize(&stream);
+    scanner.Initialize(&stream, !is_module);
     i::PreParser::PreParseResult result =
         preparser.PreParseProgram(&preparser_materialized_literals, is_module);
     CHECK_EQ(i::PreParser::kPreParseSuccess, result);
@@ -5648,7 +5647,7 @@ TEST(ScanHTMLEndComments) {
     i::Utf8ToUtf16CharacterStream stream(source, i::StrLength(tests[i]));
     i::CompleteParserRecorder log;
     i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-    scanner.Initialize(&stream);
+    scanner.Initialize(&stream, true);
     i::Zone zone(CcTest::i_isolate()->allocator());
     i::AstValueFactory ast_value_factory(
         &zone, CcTest::i_isolate()->heap()->HashSeed());
@@ -5666,7 +5665,7 @@ TEST(ScanHTMLEndComments) {
     i::Utf8ToUtf16CharacterStream stream(source, i::StrLength(fail_tests[i]));
     i::CompleteParserRecorder log;
     i::Scanner scanner(CcTest::i_isolate()->unicode_cache());
-    scanner.Initialize(&stream);
+    scanner.Initialize(&stream, true);
     i::Zone zone(CcTest::i_isolate()->allocator());
     i::AstValueFactory ast_value_factory(
         &zone, CcTest::i_isolate()->heap()->HashSeed());

@@ -51,7 +51,7 @@ Scanner::Scanner(UnicodeCache* unicode_cache)
 }
 
 
-void Scanner::Initialize(Utf16CharacterStream* source) {
+void Scanner::Initialize(Utf16CharacterStream* source, bool allow_html_comments) {
   source_ = source;
   // Need to capture identifiers in order to recognize "get" and "set"
   // in object literals.
@@ -59,6 +59,7 @@ void Scanner::Initialize(Utf16CharacterStream* source) {
   // Skip initial whitespace allowing HTML comment ends just like
   // after a newline and scan first token.
   has_line_terminator_before_next_ = true;
+  allow_html_comments_ = allow_html_comments;
   SkipWhiteSpace();
   Scan();
 }
