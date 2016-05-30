@@ -196,8 +196,14 @@ class ParseInfo {
   FunctionLiteral* literal_;  // produced by full parser.
   Scope* scope_;              // produced by scope analysis.
 
-  void SetFlag(Flag f) { flags_ |= f; }
-  void SetFlag(Flag f, bool v) { flags_ = v ? flags_ | f : flags_ & ~f; }
+  void SetFlag(Flag f) {
+    if (f == kModule) { printf("SetFlag kModule HIGH\n"); }
+    flags_ |= f;
+  }
+  void SetFlag(Flag f, bool v) {
+    if (f == kModule) { printf("SetFlag kModule %s\n", v ? "true" : "false"); }
+    flags_ = v ? flags_ | f : flags_ & ~f;
+  }
   bool GetFlag(Flag f) const { return (flags_ & f) != 0; }
 };
 

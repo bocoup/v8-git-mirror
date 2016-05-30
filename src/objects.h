@@ -6816,6 +6816,8 @@ class SharedFunctionInfo: public HeapObject {
   // spending time attempting to optimize it again.
   DECL_BOOLEAN_ACCESSORS(optimization_disabled)
 
+  DECL_BOOLEAN_ACCESSORS(within_module)
+
   // Indicates the language mode.
   inline LanguageMode language_mode();
   inline void set_language_mode(LanguageMode language_mode);
@@ -7170,6 +7172,7 @@ class SharedFunctionInfo: public HeapObject {
     kDeserialized,
     kIsDeclaration,
     kCompilerHintsCount,  // Pseudo entry
+    kWithinModule,
   };
   // Add hints for other modes when they're added.
   STATIC_ASSERT(LANGUAGE_END == 3);

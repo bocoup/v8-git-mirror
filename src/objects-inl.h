@@ -5712,6 +5712,9 @@ BOOL_GETTER(SharedFunctionInfo,
             optimization_disabled,
             kOptimizationDisabled)
 
+BOOL_ACCESSORS(SharedFunctionInfo, compiler_hints, within_module,
+               kWithinModule)
+
 AbstractCode* SharedFunctionInfo::abstract_code() {
   if (HasBytecodeArray()) {
     return AbstractCode::cast(bytecode_array());
