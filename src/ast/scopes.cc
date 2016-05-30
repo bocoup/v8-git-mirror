@@ -308,7 +308,7 @@ void Scope::Initialize() {
     outer_scope_->inner_scopes_.Add(this, zone());
     scope_inside_with_ = outer_scope_->scope_inside_with_ || is_with_scope();
     scope_inside_module_ =
-        outer_scope->scope_inside_module_ || is_module_scope();
+        outer_scope_->scope_inside_module_ || is_module_scope();
   } else {
     scope_inside_with_ = is_with_scope();
     scope_inside_module_ = is_module_scope();
