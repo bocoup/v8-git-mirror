@@ -526,7 +526,6 @@ MUST_USE_RESULT MaybeHandle<Code> GetUnoptimizedCode(CompilationInfo* info) {
   PostponeInterruptsScope postpone(info->isolate());
 
   // Parse and update CompilationInfo with the results.
-  printf("GetUnoptimizedCode -- ParseStatic\n");
   if (!Parser::ParseStatic(info->parse_info())) return MaybeHandle<Code>();
   Handle<SharedFunctionInfo> shared = info->shared_info();
   DCHECK_EQ(shared->language_mode(), info->literal()->language_mode());
@@ -639,7 +638,6 @@ bool GetOptimizedCodeNow(CompilationJob* job) {
 
   // Parsing is not required when optimizing from existing bytecode.
   if (!info->is_optimizing_from_bytecode()) {
-    printf("GetOptimizedCodeNow\n");
     if (!Compiler::ParseAndAnalyze(info->parse_info())) return false;
   }
 
@@ -684,7 +682,6 @@ bool GetOptimizedCodeLater(CompilationJob* job) {
 
   // Parsing is not required when optimizing from existing bytecode.
   if (!info->is_optimizing_from_bytecode()) {
-      printf("GetOptimizedCodeLater\n");
     if (!Compiler::ParseAndAnalyze(info->parse_info())) return false;
   }
 
@@ -914,7 +911,6 @@ MaybeHandle<Code> GetBaselineCode(Handle<JSFunction> function) {
   }
 
   // Parse and update CompilationInfo with the results.
-  printf("GetBaselineCode -- ParseStatic\n");
   if (!Parser::ParseStatic(info.parse_info())) return MaybeHandle<Code>();
   Handle<SharedFunctionInfo> shared = info.shared_info();
   DCHECK_EQ(shared->language_mode(), info.literal()->language_mode());
@@ -1050,7 +1046,6 @@ Handle<SharedFunctionInfo> CompileToplevel(CompilationInfo* info) {
         parse_info->set_cached_data(nullptr);
         parse_info->set_compile_options(ScriptCompiler::kNoCompileOptions);
       }
-      printf("CompileTopLevel -- ParseStatic\n");
       if (!Parser::ParseStatic(parse_info)) {
         return Handle<SharedFunctionInfo>::null();
       }
@@ -1127,7 +1122,6 @@ bool Compiler::Analyze(ParseInfo* info) {
 }
 
 bool Compiler::ParseAndAnalyze(ParseInfo* info) {
-  printf("ParseAndAnalyze -- ParseStatic\n");
   if (!Parser::ParseStatic(info)) return false;
   if (!Compiler::Analyze(info)) return false;
   DCHECK_NOT_NULL(info->literal());
@@ -1510,7 +1504,6 @@ Handle<SharedFunctionInfo> Compiler::GetSharedFunctionInfoForScript(
     Zone zone(isolate->allocator());
     ParseInfo parse_info(&zone, script);
     CompilationInfo info(&parse_info, Handle<JSFunction>::null());
-    printf("(GetSharedFunctionInfoForScript) is_module = %s\n", is_module ? "true" : "false");
     if (is_module) {
       parse_info.set_module();
     } else {

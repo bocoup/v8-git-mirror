@@ -343,6 +343,9 @@ class Scope: public ZoneObject {
   // Is this scope inside a with statement.
   bool inside_with() const { return scope_inside_with_; }
 
+  // Is this scope inside ECMAScript module code.
+  bool inside_module() const { return scope_inside_module_; }
+
   // Does this scope access "arguments".
   bool uses_arguments() const { return scope_uses_arguments_; }
   // Does this scope access "super" property (super.foo).
@@ -639,6 +642,8 @@ class Scope: public ZoneObject {
   //
   // This scope is inside a 'with' of some outer scope.
   bool scope_inside_with_;
+  // This scope is inside ECMAScript module code
+  bool scope_inside_module_;
   // This scope or a nested catch scope or with scope contain an 'eval' call. At
   // the 'eval' call site this scope is the declaration scope.
   bool scope_calls_eval_;

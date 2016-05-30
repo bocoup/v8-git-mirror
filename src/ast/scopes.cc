@@ -169,6 +169,7 @@ void Scope::SetDefaults(ScopeType scope_type, Scope* outer_scope,
   arguments_ = nullptr;
   this_function_ = nullptr;
   scope_inside_with_ = false;
+  scope_inside_module_ = false;
   scope_calls_eval_ = false;
   scope_uses_arguments_ = false;
   scope_uses_super_property_ = false;
@@ -306,8 +307,10 @@ void Scope::Initialize() {
   if (outer_scope_ != NULL) {
     outer_scope_->inner_scopes_.Add(this, zone());
     scope_inside_with_ = outer_scope_->scope_inside_with_ || is_with_scope();
+    scope_inside_module_ = outer_scope->scope_inside_module_ || is_module_scope();
   } else {
     scope_inside_with_ = is_with_scope();
+    scope_inside_module_ = is_module_scope();
   }
 
   // Declare convenience variables and the receiver.
@@ -964,6 +967,7 @@ void Scope::Print(int n) {
   if (asm_module_) Indent(n1, "// scope is an asm module\n");
   if (asm_function_) Indent(n1, "// scope is an asm function\n");
   if (scope_inside_with_) Indent(n1, "// scope inside 'with'\n");
+  if (scope_inside_module_) Indent(n1, "// scope inside module\n");
   if (scope_calls_eval_) Indent(n1, "// scope calls 'eval'\n");
   if (scope_uses_arguments_) Indent(n1, "// scope uses 'arguments'\n");
   if (scope_uses_super_property_)

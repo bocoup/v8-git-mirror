@@ -71,10 +71,7 @@ ParseInfo::ParseInfo(Zone* zone, Handle<SharedFunctionInfo> shared)
   set_stack_limit(isolate_->stack_guard()->real_climit());
   set_unicode_cache(isolate_->unicode_cache());
   set_language_mode(shared->language_mode());
-  // IDEA:
   set_module(shared->within_module());
-  // Or (less likely)
-  // set_module(isolate->is_module());
   set_shared_info(shared);
 
   Handle<Script> script(Script::cast(shared->script()));
@@ -850,14 +847,6 @@ FunctionLiteral* Parser::ParseProgram(Isolate* isolate, ParseInfo* info) {
 
   source = String::Flatten(source);
   FunctionLiteral* result;
-
-  const char* foo;
-  if (info->is_module()) {
-    foo = "    ";
-  } else {
-    foo = " NOT";
-  }
-  printf("It's%s a module %d\n", foo, info->hash_seed());
 
   if (source->IsExternalTwoByteString()) {
     // Notice that the stream is destroyed at the end of the branch block.
@@ -5213,9 +5202,6 @@ void Parser::Internalize(Isolate* isolate, Handle<Script> script, bool error) {
 
 bool Parser::ParseStatic(ParseInfo* info) {
   Parser parser(info);
-  printf("ParseStatic\n");
-  printf("  is_module: %s\n", info->is_module() ? "true" : "false");
-  printf("  is_lazy: %s\n", info->is_lazy() ? "true" : "false");
   if (parser.Parse(info)) {
     info->set_language_mode(info->literal()->language_mode());
     return true;
