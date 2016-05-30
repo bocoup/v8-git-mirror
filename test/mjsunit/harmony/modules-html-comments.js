@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
+// Flags: --allow-natives-syntax
+//
 // MODULE
 
 var x = 1;
@@ -28,3 +30,17 @@ assertFalse(b, 'g');
 
 var b = true <!- true;
 assertFalse(b, 'h');
+
+function f() {
+  var x = 9;
+  x --> 0 && 0 <!-- x;
+  return x;
+}
+
+%DeoptimizeFunction(f);
+
+assertEquals(f(), 7);
+
+%OptimizeFunctionOnNextCall(f);
+
+assertEquals(f(), 7);
